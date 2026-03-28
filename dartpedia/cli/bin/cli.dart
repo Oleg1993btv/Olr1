@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http; // Add this line
 
 const version = '0.0.1'; // Add this line
 
-// ... (existing const version declaration and printUsage function)
 
 void main(List<String> arguments) {
   if (arguments.isEmpty || arguments.first == 'help') {
@@ -15,10 +14,9 @@ void main(List<String> arguments) {
     final inputArgs = arguments.length > 1 ? arguments.sublist(1) : null;
     searchWikipedia(inputArgs); // Call searchWikipedia (no 'await' needed here for main)
   } else {
-    printUsage(); // Catch all for any unrecognized command.
+    printUsage(); // Catch all for any unrecognized command.666
   }
 }
-
 
 void searchWikipedia(List<String>? arguments) async {
   final String articleTitle;

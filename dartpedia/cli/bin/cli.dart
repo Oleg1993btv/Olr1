@@ -17,9 +17,6 @@ void main(List<String> arguments) {
   }
 }
 
-
-// ... (your existing main function)
-
 void searchWikipedia(List<String>? arguments) {
   final String articleTitle;
 
@@ -43,4 +40,19 @@ void printUsage() { // Add this new function
   print(
     "The following commands are valid: 'help', 'version', 'search <ARTICLE-TITLE>'"
   );
+}
+
+Future<String> getWikipediaArticle(String articleTitle) async {
+  final url = Uri.https(
+    'en.wikipedia.org',
+    '/api/rest_v1/page/summary/$articleTitle',
+  );
+  final response = await http.get(url); // Make the HTTP request
+
+  if (response.statusCode == 200) {
+    return response.body; // Return the response body if successful
+  }
+
+  // Return an error message if the request failed
+  return 'Error: Failed to fetch article "$articleTitle". Status code: ${response.statusCode}';
 }

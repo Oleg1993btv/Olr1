@@ -3,21 +3,22 @@ import 'package:http/http.dart' as http; // Add this line
 
 const version = '0.0.1'; // Add this line
 
+// ... (existing const version declaration and printUsage function)
+
 void main(List<String> arguments) {
   if (arguments.isEmpty || arguments.first == 'help') {
     printUsage();
   } else if (arguments.first == 'version') {
     print('Dartpedia CLI version $version');
-  } else if (arguments.first == 'search') {
-    // Add this new block:
+  } else if (arguments.first == 'wikipedia') { // Changed to 'wikipedia'
+    // Pass all arguments *after* 'wikipedia' to searchWikipedia
     final inputArgs = arguments.length > 1 ? arguments.sublist(1) : null;
-    searchWikipedia(inputArgs);
+    searchWikipedia(inputArgs); // Call searchWikipedia (no 'await' needed here for main)
   } else {
-    printUsage();
+    printUsage(); // Catch all for any unrecognized command.
   }
 }
 
-// ... (beginning of searchWikipedia function, after determining articleTitle)
 
 void searchWikipedia(List<String>? arguments) async {
   final String articleTitle;

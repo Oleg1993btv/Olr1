@@ -1,20 +1,9 @@
 import 'dart:async';
 import 'package:command_runner/command_runner.dart';
-
 import 'console.dart';
 import 'exceptions.dart';
-import 'arguments.dart';
 
-// Prints program and argument usage.
-//
-// When given a command as an argument, it prints the usage of
-// that command only, including its options and other details.
-// When the flag 'verbose' is set, it prints options and details for all commands.
-//
-// This command isn't automatically added to CommandRunner instances.
-// Packages users should add it themselves with [CommandRunner.addCommand],
-// or create their own command that prints usage.
-
+/// Команда help - выводит подробную информацию об использовании
 class HelpCommand extends Command {
   HelpCommand() {
     addFlag(
@@ -29,6 +18,7 @@ class HelpCommand extends Command {
           "When a command is passed as an argument, prints only that command's verbose usage.",
     );
   }
+
   @override
   String get name => 'help';
 
@@ -38,54 +28,65 @@ class HelpCommand extends Command {
   @override
   String? get help => 'Prints this usage information';
 
- @override
-FutureOr<String> run(ArgResults args) async {
-  final buffer = StringBuffer();
-  buffer.writeln(runner.usage.titleText);
+  @override
+  FutureOr<String> run(ArgResults args) async {
+    final buffer = StringBuffer();
+    buffer.writeln(runner.usage.titleText);
 
-  if (args.flag('verbose')) {
-    for (var cmd in runner.commands) {
-      buffer.write(_renderCommandVerbose(cmd));
+    // Режим подробного вывода (все команды)
+    if (args.flag('verbose')) {
+      for (var cmd in runner.commands) {
+        buffer.write(_renderCommandVerbose(cmd));
+      }
+      return buffer.toString();
+    }
+
+    // Режим вывода конкретной команды
+    if (args.hasOption('command')) {
+      var (:option, :input) = args.getOption('command');
+      var cmd = runner.commands.firstWhere(
+        (command) => command.name == input,
+        orElse: () {
+          throw ArgumentException(
+            'Input ${args.commandArg} is not a known command.',
+          );
+        },
+      );
+      return _renderCommandVerbose(cmd);
+    }
+
+    // Обычный режим (только список команд)
+    for (var command in runner.commands) {
+      buffer.writeln(command.usage);
     }
 
     return buffer.toString();
   }
 
-  if (args.hasOption('command')) {
-    var (:option, :input) = args.getOption('command');
-
-    var cmd = runner.commands.firstWhere(
-      (command) => command.name == input,
-      orElse: () {
-        throw ArgumentException(
-          'Input ${args.commandArg} is not a known command.',
-        );
-      },
-    );
+  /// Форматирует подробный вывод для одной команды
   String _renderCommandVerbose(Command cmd) {
-  final indent = ' ' * 10;
-  final buffer = StringBuffer();
-  buffer.writeln(cmd.usage.instructionText); //abbr, name: description
-  buffer.writeln('$indent ${cmd.help}');
-  if (cmd.valueHelp != null) {
-    buffer.writeln(
-      '$indent [Argument] Required? ${cmd.requiresArgument}, Type: ${cmd.valueHelp}, Default: ${cmd.defaultValue ?? 'none'}',
-    );
+    final indent = ' ' * 10;
+    final buffer = StringBuffer();
+    
+    // Название команды и описание (желтым цветом)
+    buffer.writeln(cmd.usage.instructionText);
+    
+    // Помощь по команде
+    buffer.writeln('$indent ${cmd.help}');
+    
+    // Информация об аргументе (если есть)
+    if (cmd.valueHelp != null) {
+      buffer.writeln(
+        '$indent [Argument] Required? ${cmd.requiresArgument}, Type: ${cmd.valueHelp}, Default: ${cmd.defaultValue ?? 'none'}',
+      );
+    }
+    
+    // Список опций
+    buffer.writeln('$indent Options:');
+    for (var option in cmd.options) {
+      buffer.writeln('$indent ${option.usage}');
+    }
+    
+    return buffer.toString();
   }
-  buffer.writeln('$indent Options:');
-  for (var option in cmd.options) {
-    buffer.writeln('$indent ${option.usage}');
-  }
-  return buffer.toString();
-}
-
-  }
-
-  // Verbose is false and no arg was passed in, so print basic usage.
-  for (var command in runner.commands) {
-    buffer.writeln(command.usage);
-  }
-
-  return buffer.toString();
-}
 }

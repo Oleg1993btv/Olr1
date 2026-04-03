@@ -17,7 +17,7 @@ class GetArticleCommand extends Command {
   String get name => 'article';
 
   @override
-  String get help => 'Gets an article by exact canonical wikipedia title.';
+  String get help => 'Gets an article by exact canonical Wikipedia title.';
 
   @override
   String get defaultValue => 'cat';
@@ -38,13 +38,13 @@ class GetArticleCommand extends Command {
     } on HttpException catch (e) {
       logger
         ..warning(e.message)
-        ..warning(e.uri)
+        ..warning(e.uri?.toString() ?? 'no uri')
         ..info(usage);
       return e.message;
     } on FormatException catch (e) {
       logger
         ..warning(e.message)
-        ..warning(e.source)
+        ..warning(e.source ?? 'no source')
         ..info(usage);
       return e.message;
     }

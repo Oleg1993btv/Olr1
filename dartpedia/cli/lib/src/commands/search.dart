@@ -9,8 +9,7 @@ class SearchCommand extends Command {
   SearchCommand({required this.logger}) {
     addFlag(
       'im-feeling-lucky',
-      help:
-          'If true, prints the summary of the top article that the search returns.',
+      help: 'If true, prints the summary of the top article that the search returns.',
     );
   }
 
@@ -34,8 +33,7 @@ class SearchCommand extends Command {
 
   @override
   FutureOr<String> run(ArgResults args) async {
-    if (requiresArgument &&
-        (args.commandArg == null || args.commandArg!.isEmpty)) {
+    if (requiresArgument && (args.commandArg == null || args.commandArg!.isEmpty)) {
       return 'Please include a search term';
     }
 
@@ -63,13 +61,13 @@ class SearchCommand extends Command {
     } on HttpException catch (e) {
       logger
         ..warning(e.message)
-        ..warning(e.uri)
+        ..warning(e.uri?.toString() ?? 'no uri')
         ..info(usage);
       return e.message;
     } on FormatException catch (e) {
       logger
         ..warning(e.message)
-        ..warning(e.source)
+        ..warning(e.source ?? 'no source')
         ..info(usage);
       return e.message;
     }

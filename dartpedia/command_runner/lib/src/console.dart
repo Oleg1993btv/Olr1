@@ -40,7 +40,6 @@ enum ConsoleColor {
   /// Light grey, good for text, #F8F9FA
   grey(240, 240, 240),
 
-  ///
   white(255, 255, 255);
 
   const ConsoleColor(this.r, this.g, this.b);
@@ -48,14 +47,11 @@ enum ConsoleColor {
   final int r;
   final int g;
   final int b;
-  String get enableForeground => '$ansiEscapeLiteral[38;2;$r;$g;${b}m';
 
   /// Change text color for all future output (until reset)
-  /// ```dart
-  /// print('hello'); // prints in terminal default color
-  /// print('AnsiColor.red.enableForeground');
-  /// print('hello'); // prints in red color
-  /// ```
+  String get enableForeground => '$ansiEscapeLiteral[38;2;$r;$g;${b}m';
+
+  /// Change background color for all future output (until reset)
   String get enableBackground => '$ansiEscapeLiteral[48;2;$r;$g;${b}m';
 
   /// Reset text and background color to terminal defaults
@@ -68,11 +64,11 @@ enum ConsoleColor {
 
   /// Sets background color and then resets the color change
   String applyBackground(String text) {
-    return '$ansiEscapeLiteral[48;2;$r;$g;${b}m$text$ansiEscapeLiteral[0m';
+    return '$ansiEscapeLiteral[48;2;$r;$g;${b}m$text$reset';
   }
-  
 }
-// Add this code to the bottom of the file
+
+/// Extension on String to add color and formatting utilities.
 extension TextRenderUtils on String {
   String get errorText => ConsoleColor.red.applyForeground(this);
   String get instructionText => ConsoleColor.yellow.applyForeground(this);
@@ -103,5 +99,3 @@ extension TextRenderUtils on String {
     return output;
   }
 }
-
-

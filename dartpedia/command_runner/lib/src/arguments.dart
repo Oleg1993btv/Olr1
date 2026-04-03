@@ -1,23 +1,112 @@
+import 'dart:async';
+import 'dart:collection';
 
-
-import 'dart:collection'; // New import
-import '../command_runner.dart';
-import 'dart:async'; // New import
-
+import 'command_runner_base.dart';
 
 enum OptionType { flag, option }
-// Paste this new class below the enum you added
+
+/// Holds the results of parsing command-line arguments.
+class ArgResults {
+  Command? command;
+  String? commandArg;
+  Map<Option, Object?>? _options;
+
+  ArgResults({this.command, this.commandArg, Map<Option, Object?>? options}) {
+    _options = options;
+  }
+
+  /// Checks if a flag (boolean option) was set.
+  bool flag(String name) {
+    final option = _findOption(name);
+    if (option == null || option.type != OptionType.flag) return false;
+    return _options?[option] == true;
+  }
+
+  /// Checks if an option (with a value) was provided.
+  bool hasOption(String name) {
+    final option = _findOption(name);
+    if (option == null || option.type != OptionType.option) return false;
+    return _options?.containsKey(option) ?? false;
+  }
+
+  /// Returns a record containing the [Option] object and its value.
+  ({Option option, Object? input}) getOption(String name) {
+    final option = _findOption(name);
+    if (option == null) {
+      throw ArgumentError('Option "$name" not found');
+    }
+    final value = _options?[option];
+    return (option: option, input: value);
+  }
+
+  Option? _findOption(String name) {
+    // Search by name or abbreviation
+    for (final option in _options?.keys ?? <Option>[]) {
+      if (option.name == name || option.abbr == name) {
+        return option;
+      }
+    }
+    return null;
+  }
+}
+
+// The rest of the file (Argument, Command, Option) stays exactly as before.
+// (I'll include it for completeness, but it's unchanged.)
+
 abstract class Argument {
   String get name;
   String? get help;
-
-  // In the case of flags, the default value is a bool.
-  // In other options and commands, the default value is a String.
-  // NB: flags are just Option objects that don't take arguments
   Object? get defaultValue;
   String? get valueHelp;
-
   String get usage;
+}
+
+abstract class Command extends Argument {
+  @override
+  String get name;
+  String get description;
+  bool get requiresArgument => false;
+  late CommandRunner runner;
+  @override
+  String? help;
+  @override
+  String? defaultValue;
+  @override
+  String? valueHelp;
+  final List<Option> _options = [];
+  UnmodifiableSetView<Option> get options =>
+      UnmodifiableSetView(_options.toSet());
+
+  void addFlag(String name,
+      {String? help, String? abbr, String? valueHelp}) {
+    _options.add(Option(
+      name,
+      help: help,
+      abbr: abbr,
+      defaultValue: false,
+      valueHelp: valueHelp,
+      type: OptionType.flag,
+    ));
+  }
+
+  void addOption(String name,
+      {String? help,
+      String? abbr,
+      String? defaultValue,
+      String? valueHelp}) {
+    _options.add(Option(
+      name,
+      help: help,
+      abbr: abbr,
+      defaultValue: defaultValue,
+      valueHelp: valueHelp,
+      type: OptionType.option,
+    ));
+  }
+
+  FutureOr<Object?> run(ArgResults args);
+  @override
+  String get usage => '$name:  $description';
 }
 
 class Option extends Argument {
@@ -32,17 +121,12 @@ class Option extends Argument {
 
   @override
   final String name;
-
   final OptionType type;
-
   @override
   final String? help;
-
   final String? abbr;
-
   @override
   final Object? defaultValue;
-
   @override
   final String? valueHelp;
 
@@ -51,106 +135,6 @@ class Option extends Argument {
     if (abbr != null) {
       return '-$abbr,--$name: $help';
     }
-
     return '--$name: $help';
   }
 }
-// Add this class below the Option class
-abstract class Command extends Argument {
-  @override
-  String get name;
-
-  String get description;
-
-  bool get requiresArgument => false;
-
-  late CommandRunner runner;
-
-  @override
-  String? help;
-
-  @override
-  String? defaultValue;
-
-  @override
-  String? valueHelp;
-  final List<Option> _options = [];
-
-  UnmodifiableSetView<Option> get options =>
-      UnmodifiableSetView(_options.toSet());
-
-
-     void addFlag(String name, {String? help, String? abbr, String? valueHelp}) {
-    _options.add(
-      Option(
-        name,
-        help: help,
-        abbr: abbr,
-        defaultValue: false,
-        valueHelp: valueHelp,
-        type: OptionType.flag,
-      ),
-    );
-  }
-
-  // An option is an [Option] that takes a value.
-  void addOption(
-    String name, {
-    String? help,
-    String? abbr,
-    String? defaultValue,
-    String? valueHelp,
-  }) {
-    _options.add(
-      Option(
-        name,
-        help: help,
-        abbr: abbr,
-        defaultValue: defaultValue,
-        valueHelp: valueHelp,
-        type: OptionType.option,
-      ),
-    );
-  }
-  FutureOr<Object?> run(ArgResults args);
-
-  @override
-  String get usage {
-    return '$name:  $description';
-  }
-}
-// Add this class to the end of the file
-class ArgResults {
-  Command? command;
-  String? commandArg;
-  Map<Option, Object?> options = {};
-
-  // Returns true if the flag exists.
-  bool flag(String name) {
-    // Only check flags, because we're sure that flags are booleans.
-    for (var option in options.keys.where(
-      (option) => option.type == OptionType.flag,
-    )) {
-      if (option.name == name) {
-        return options[option] as bool;
-      }
-    }
-    return false;
-  }
-
-  bool hasOption(String name) {
-    return options.keys.any((option) => option.name == name);
-  }
-
-  ({Option option, Object? input}) getOption(String name) {
-    var mapEntry = options.entries.firstWhere(
-      (entry) => entry.key.name == name || entry.key.abbr == name,
-    );
-
-    return (option: mapEntry.key, input: mapEntry.value);
-  }
-}
-
-
-
-

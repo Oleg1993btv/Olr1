@@ -11,23 +11,21 @@ class PrettyEcho extends Command {
     );
   }
 
-  @override
+@override
   String get name => 'echo';
 
-  @override
+@override
   bool get requiresArgument => true;
-
-  @override
+@override
   String get description => 'Print input, but colorful.';
 
-  @override
+@override
   String? get help =>
       'echos a String provided as an argument with ANSI coloring,';
-
-  @override
+      @override
   String? get valueHelp => 'STRING';
 
-  @override
+@override
   FutureOr<String> run(ArgResults arg) {
     if (arg.commandArg == null) {
       throw ArgumentException(
